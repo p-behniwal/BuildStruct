@@ -1,19 +1,26 @@
 package com.mygdx.game;
 
+import sun.awt.image.ImageWatched;
+import sun.font.TrueTypeFont;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.Scanner;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.net.InetAddress;
 
 public class MainServer {
 
     private String ip;
-    public clientConnection player;
-    public volatile String moveInput = "";
+    private clientConnection player;
+    public String moveInput="";
 
 
     public MainServer (String ip) {
@@ -29,12 +36,10 @@ public class MainServer {
             System.out.println("Connection established");
             this.player = new clientConnection(client); // Creating a new thread and starting it
             moveInput = player.moveInput;
-            server.close();
 
         } catch (IOException e) {
             System.exit(9);
         }
-        
     }
 
     public void send(String str) {
@@ -55,16 +60,18 @@ class clientConnection{
     LinkedBlockingQueue<String> sendQueue = new LinkedBlockingQueue<>();
     Thread writer;
     Thread reader;
-    public String moveInput = "";
-    
+    public String moveInput="";
+
     clientConnection(Socket client) {
         try {
             this.clientSocket = client;
             this.out = new PrintWriter(clientSocket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            System.out.println("1");
             this.writer = new Thread(() -> {
                 while (clientSocket.isConnected()) {
                     try{
+//                        System.out.println("1");
                         String message = sendQueue.take();
                         out.write(message+"\n");
                         out.flush();
@@ -76,11 +83,11 @@ class clientConnection{
             this.writer.start();
 
             this.reader = new Thread(() -> {
+                String temp;
                 while (clientSocket.isConnected()) {
                     try{
-                    	moveInput = in.readLine();
-                    	System.out.println(moveInput);
-                        
+                        moveInput = in.readLine().substring(1);
+                        System.out.println(moveInput);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

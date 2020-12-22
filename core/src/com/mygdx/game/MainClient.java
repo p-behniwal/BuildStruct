@@ -13,8 +13,8 @@ public class MainClient {
 
     private LinkedBlockingQueue<String> sendqueue;
     private String ip;
-    public String hostMap;
-    public String moveInput = "";
+    public String hostMap= "";
+    public String moveInput="";
     public String eInput = "";
 
     public MainClient(String ip) {
@@ -28,25 +28,27 @@ public class MainClient {
             Socket connector = new Socket(); // Makes a new socket object
             connector.connect(new InetSocketAddress(ip, 3000), 5000); // Connecting to the server
             System.out.println("Connected");
+            String text;
             PrintWriter out = new PrintWriter(connector.getOutputStream(), true); // Creates a writer to decode the inbound data
             BufferedReader in = new BufferedReader(new InputStreamReader(connector.getInputStream())); // Create a buffer reader to write outbound data
             Thread reader = new Thread(() -> {
-                
+
                 try {
-                	
                     hostMap = in.readLine();
+                    System.out.println(hostMap);
                 } catch (IOException e) {
+
                     e.printStackTrace();
                 }
                 while (connector.isConnected()) {
                     try{
-                    	String i = in.readLine();
-                    	if(i.split(" ")[0].equals("p")) {
-                    		moveInput = i.substring(1);
-                    	} else if(i.split(" ")[0].equals("e")) {
-                    		eInput = i.substring(1);
-                    	}
-
+                        String i = in.readLine();
+                        if (i.split(" ")[0].equals("p")) {
+                            moveInput = i.substring(1);
+                        }
+                        else if(i.split(" ")[0].equals("e")){
+                            eInput = i.substring(1);
+                        }
                     } catch (Exception e) {
                     }
                 }
@@ -57,19 +59,19 @@ public class MainClient {
             Thread writer = new Thread(() -> {
                 while (connector.isConnected()) {
                     try{
-                        out.write(this.sendqueue.take());
+                        String i = this.sendqueue.take();
+                        out.write(i + "\n");
                         out.flush();
                     } catch (Exception e) {
                     }
                 }
             });
-            connector.close();
+
             writer.start();
 
         } catch (IOException e){
             e.printStackTrace();
         }
-        input.close();
     }
 
     public void send(String str) {

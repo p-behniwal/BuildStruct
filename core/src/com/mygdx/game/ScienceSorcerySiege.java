@@ -45,7 +45,6 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 	public MainServer host;
 	public MainClient client;
 
-
 	@Override
 	public void create () {
 		//Initiates fields
@@ -55,8 +54,9 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 			System.out.println("Would you like to Host (H) or find (F) a game?");
 			input = kb.nextLine();
 			if(input.equals("H")) {
-				host = new MainServer("10.88.193.255");
+				host = new MainServer(" 10.88.193.255");
 				host.run();
+				System.out.println("hell");
 				isHost = true;
 			} else if(input.equals("F")) {
 				client = new MainClient("10.88.193.255");
@@ -97,8 +97,8 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 
 		players = new Player[2];
 
-		enemies = new ArrayList<Enemy>();
 
+		enemies = new ArrayList<Enemy>();
 
 		if(isHost) {
 			map = new Field(10); //Creates the field
@@ -107,9 +107,12 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 			players[0] = new Player(new Sprite(playerTex), 5, 5); //Player controlled
 			players[1] = new Player(new Sprite(playerTex), 100, 100); //Enemy controlled
 		} else {
-			map = new Field(client.hostMap, 10); //Creates the field
 			players[0] = new Player(new Sprite(playerTex), 100, 100); //Player controlled
 			players[1] = new Player(new Sprite(playerTex), 5, 5); //Enemy controlled
+			while (client.hostMap.equals("")) {
+				System.out.println("hi");
+			}// d
+			map = new Field(client.hostMap, 10); //Creates the field
 		}
 		tiledMapRenderer = new OrthogonalTiledMapRenderer(map);
 		players[0].setGameState("Field"); //Sets both players' game states to field, which is where they'll begin
@@ -126,18 +129,21 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 				signalSent = players[0].kbInput(map, camera); //Getting all player input and determining the game state based off of that
 				if(isHost) {
 					host.send(signalSent);
-				} else {
+				}
+				else{
 					client.send(signalSent);
 				}
 			} else {
 				respawnCountdown = true; //ensures that the respawn countdown will be drawn while the player is dead
 			}
 			if(players[1].isAlive()) {
-				if(isHost) {
-					players[1].networkInput(map, camera, host.player.moveInput); //Processing the opponent's actions
-				} else {
-					players[1].networkInput(map, camera, client.moveInput);
+				if(isHost){
+					players[1].networkInput(map, camera, host.moveInput); //Processing the opponent's actions
 				}
+				else{
+					players[1].networkInput(map, camera, client.moveInput); //Processing the opponent's actions
+				}
+				//players[1].networkInput(map, camera, signalReceived);
 			}
 			for(Player player : players) {
 				player.update(Gdx.graphics.getRawDeltaTime(), camera, map); //Delta time used for smooth movements
@@ -150,11 +156,14 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 				}
 				player.countRespawn(Gdx.graphics.getRawDeltaTime(), map); //Counts down each player's respawn timer if they are dead
 			}
-			if(isHost) {
-				host.send(spawnEnemies()); //Spawns enemies onto the map when appropriate
-			} else {
+
+			if(isHost){
+				host.send(spawnEnemies());  //Spawns enemies onto the map when appropriate
+			}
+			else{
 				spawnEnemies(client.eInput);
 			}
+			spawnEnemies(); //Spawns enemies onto the map when appropriate
 			if(players[0].getGameState().equals("Field")) { //Handles camera work
 				if(players[0].getX() - camera.position.x > w * camera.zoom - 250  && camera.position.x + w * camera.zoom / 2 < map.ground.getWidth() * map.ground.getTileWidth()) { //Scrolling when at right side of the screen
 					camera.translate(players[0].getdefSpeed() * Gdx.graphics.getRawDeltaTime() * players[0].moveMod(map), 0);
@@ -360,7 +369,7 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 						if(!potentialEnemy.isNear(p)) {
 							enemies.add(potentialEnemy);
 							spawnTimer = randint(5, 20);
-							enemyPos += (" " + potentialEnemy.getX() + "," + potentialEnemy.getY());
+							enemyPos += (" " +potentialEnemy.getX()+","+potentialEnemy.getY());
 						}
 					}
 				}
@@ -368,16 +377,15 @@ public class ScienceSorcerySiege extends ApplicationAdapter{
 		}
 		return enemyPos;
 	}
-	
-	private void spawnEnemies(String signal) {
-		for(String s : signal.split(" ")) {
-			if(!s.isEmpty()) {
+
+	private void spawnEnemies(String signal){
+		for(String s : signal.split(" ")){
+			if(!s.isEmpty()){
 				float enemyX = Float.parseFloat(s.split(",")[0]);
-	    		float enemyY = Float.parseFloat(s.split(",")[1]);
-	    		enemies.add(new Enemy((int) totalTime, enemyX, enemyY));
+				float enemyY = Float.parseFloat(s.split(",")[1]);
+				enemies.add(new Enemy((int)totalTime,enemyX,enemyY ));
 			}
-    	}
-    	
+		}
 	}
 
 	@Override
